@@ -448,7 +448,9 @@ if [[ $DELETEONLY == "yes" ]]; then
 fi
 
 # Based on the CUR source region, bjs or global, we will define different name for datasource/dataset/dashboard
+echo REGIONCUR $REGIONCUR
 getCURDataSourceRegion
+echo REGIONCUR $REGIONCUR
 
 # We need to get the raw date format in CUR, then define ETL configuration in locagical config file in necessary
 getCURDateFormat
