@@ -22,9 +22,6 @@ if [ "$CURRENTREGION" = "" ]; then
 	CURRENTREGION="us-east-1"
 fi
 
-# Get the destination region to delete this solution
-selectRegion
-
 DATASOURCEID="cur-datasource-id-"$REGIONCUR
 DATASETID="cur-dataset-id-"$REGIONCUR
 DASHBOARDID="cur-dashboard-id-"$REGIONCUR
