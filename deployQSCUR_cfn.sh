@@ -6,17 +6,17 @@
 getCURDataSourceRegion() {
 	# Construct the Athena query string to get one region value from CUR database
 	QUERYSTRING="SELECT product_region FROM "\"$ATHENADB\".\"$ATHENATABLE\"" where length(product_region)>6 limit 1"
-	echo QUERYSTRING $QUERYSTRING >> /home/ec2-user/qscur.log
+	echo QUERYSTRING $QUERYSTRING >> /home/ec2-user/qscurlog.txt
 	# Get the Athena execution ID by running Athena query
 	EXECUTIONID=`aws athena start-query-execution \
 	--query-string "$QUERYSTRING" \
 	--result-configuration "OutputLocation"="$OUTPUTBUCKET" | jq -r '.QueryExecutionId'`
-	echo EXECUTIONID $EXECUTIONID >> /home/ec2-user/qscur.log
+	echo EXECUTIONID $EXECUTIONID >> /home/ec2-user/qscurlog.txt
 	# Validate the query result every 2 seconds
 	for curdatasourcetimer in {1..15}
 	do
 		EXECUTIONSTATUS=`aws athena get-query-execution --query-execution-id $EXECUTIONID | jq -r '.QueryExecution.Status.State'`
-		echo EXECUTIONSTATUS $EXECUTIONSTATUS >> /home/ec2-user/qscur.log
+		echo EXECUTIONSTATUS $EXECUTIONSTATUS >> /home/ec2-user/qscurlog.txt
 		# If qeury succeed, jump out the for loop, then check CUR data source region from query result
 		if [[ $EXECUTIONSTATUS == "SUCCEEDED" ]]; then
 			break
@@ -42,7 +42,8 @@ getCURDataSourceRegion() {
 
 	# Get the region name from query result
 	ATHENAQUERYRESULTS=`aws athena get-query-results --query-execution-id $EXECUTIONID | jq -r '.ResultSet.Rows[1].Data[0].VarCharValue'`
-	echo ATHENAQUERYRESULTS $ATHENAQUERYRESULTS >> /home/ec2-user/qscur.log
+	echo ATHENAQUERYRESULTS $ATHENAQUERYRESULTS >> /home/ec2-user/
+	
 	# Get all region list and put it in an Array
 	GLOBALREGIONLIST=($(aws ec2 describe-regions --query "Regions[].{Name:RegionName}" --output text))
 
