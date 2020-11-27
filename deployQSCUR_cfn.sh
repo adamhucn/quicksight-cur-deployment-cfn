@@ -1,6 +1,6 @@
 ### Powered by AWS Enterprise Support 
 ### Mail: tam-solution-costvisualization@amazon.com
-### Version 1.21.2
+### Version 1.0
 
 
 getCURDataSourceRegion() {
@@ -394,8 +394,12 @@ if [ "$CURRENTREGION" = "" ]; then
 fi
 
 # Necessary parameters from cloudformation
-REGIONCUR="us-east-1"
-
+# REGIONCUR
+# QUERYMODE
+# ATHENADB
+# ATHENATABLE
+# OUTPUTBUCKET
+# DELETEEXISTINGRESOURCE
 
 # Set the environment variable AWS_DEFAULT_REGION value to destionation region
 export AWS_DEFAULT_REGION=$REGIONCUR
@@ -415,11 +419,55 @@ IAMARN=`echo $stsresult | jq -r '.Arn'`
 # Define the QuickSight template, this is maintained by AWS GCR Enterprise Support team
 QSTEMARN="arn:aws:quicksight:us-east-1:673437017715:template/CUR-MasterTemplate-Pub"
 
-# Necessary parameters from cloudformation
-#QUERYMODE="DIRECT_QUERY"
-#ATHENADB="athenacurcfn_cur_parquet_adamhu"
-#ATHENATABLE="cur_parquet_adamhu"
-#OUTPUTBUCKET="s3://aws-athena-query-results-673437017715-us-east-1/"
+# Check if user choosed to delete existing resources created by this tool
+if [[ $DELETEEXISTINGRESOURCE == "yes" ]]; then
+	# Define keyword of resources ID created by this tool
+	DATASOURCEID="cur-datasource-id-"$REGIONCUR
+	DATASETID="cur-dataset-id-"$REGIONCUR
+	DASHBOARDID="cur-dashboard-id-"$REGIONCUR
+
+	# Delete resources created for CUR generated from global and China region
+	dashboardnum=0
+	datasetnum=0
+	datasourcenum=0
+
+	DASHBOARDLIST=`aws quicksight list-dashboards --aws-account-id $AccountID --region $REGIONCUR | jq -r '.DashboardSummaryList[].DashboardId'`
+	DASHBOARDARRAY=($DASHBOARDLIST)
+
+	for dashboarditerator in "${DASHBOARDARRAY[@]}";do 
+		if [[ $dashboarditerator =~ $DASHBOARDID ]];then 
+			aws quicksight delete-dashboard --aws-account-id $AccountID --dashboard-id $dashboarditerator --region $REGIONCUR
+			let dashboardnum=$dashboardnum+1
+		fi
+	done
+
+	DATASETLIST=`aws quicksight list-data-sets --aws-account-id $AccountID --region $REGIONCUR | jq -r '.DataSetSummaries[].DataSetId'`
+	DATASETARRAY=($DATASETLIST)
+
+	for datasetiterator in "${DATASETARRAY[@]}";do 
+		if [[ $datasetiterator =~ $DATASETID ]];then 
+			aws quicksight delete-data-set --aws-account-id $AccountID --data-set-id $datasetiterator --region $REGIONCUR
+			let datasetnum=$datasetnum+1
+		fi
+	done
+
+	DATASOURCELIST=`aws quicksight list-data-sources --aws-account-id $AccountID --region $REGIONCUR | jq -r '.DataSources[].DataSourceId'`
+	DATASOURCEARRAY=($DATASOURCELIST)
+
+	for datasourceiterator in "${DATASOURCEARRAY[@]}";do 
+		if [[ $datasourceiterator =~ $DATASOURCEID ]];then 
+			aws quicksight delete-data-source --aws-account-id $AccountID --data-source-id $datasourceiterator --region $REGIONCUR
+			let datasourcenum=$datasourcenum+1
+		fi
+	done
+
+	echo ""
+	echo Deletion Summary:
+	echo $dashboardnum dashboard\(s\) deleted.
+	echo $datasetnum dataset\(s\) deleted.
+	echo $datasourcenum datasource\(s\) deleted.
+		
+fi
 
 # Based on the CUR source region, bjs or global, we will define different name for datasource/dataset/dashboard
 getCURDataSourceRegion
