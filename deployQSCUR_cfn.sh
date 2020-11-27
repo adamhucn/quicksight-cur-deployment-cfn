@@ -291,27 +291,6 @@ updateConfigurationFile() {
 	
 }
 
-# Do not include this in main funtion currently, reserve this for future use
-getTemplate() {
-	# Update new template arn in necessary
-	read -p "Input New/Updated QuickSight template ARN here. If you do not have it,keep default:" QSTEMARN
-
-	# Set the default template arn
-	if [ "$QSTEMARN" = "" ];then
-		QSTEMARN="arn:aws:quicksight:us-east-1:673437017715:template/CUR-MasterTemplate-Pub"
-		
-	else		
-		return
-	fi
-}
-
-
-
-
-
-
-
-
 getQSUserARN(){
 	# Because identity region are different for users, and no api to get identity region, we need to consider all supported regions
 	IDENTITYREGIONLIST=($REGIONCUR $CURRENTREGION us-east-1 us-east-2 us-west-2 eu-central-1 eu-west-1 eu-west-2 ap-southeast-1 ap-northeast-1 ap-southeast-2 ap-northeast-2 ap-south-1)
@@ -385,14 +364,6 @@ aws configure set aws_access_key_id $ACCESSKEY
 aws configure set aws_secret_access_key $SECRETKEY
 aws configure set default.region us-east-1
 
-# Set the default region, only valid in current script session or shell
-CURRENTREGION=`aws configure get region`
-
-# If has no default region, set it as us-east-1
-if [ "$CURRENTREGION" = "" ]; then
-	CURRENTREGION="us-east-1"
-fi
-
 # Necessary parameters from cloudformation
 # REGIONCUR
 # QUERYMODE
@@ -422,7 +393,7 @@ IAMARN=`echo $stsresult | jq -r '.Arn'`
 QSTEMARN="arn:aws:quicksight:us-east-1:673437017715:template/CUR-MasterTemplate-Pub"
 
 # Check if user choosed to delete existing resources created by this tool
-if [[ $DELETEEXISTINGRESOURCE == "yes" ]]; then
+if [ "$DELETEEXISTINGRESOURCE" = "yes" -o "$DELETEONLY" = "yes" ]; then
 	# Define keyword of resources ID created by this tool
 	DATASOURCEID="cur-datasource-id-"$REGIONCUR
 	DATASETID="cur-dataset-id-"$REGIONCUR
@@ -469,6 +440,11 @@ if [[ $DELETEEXISTINGRESOURCE == "yes" ]]; then
 	echo $datasetnum dataset\(s\) deleted.
 	echo $datasourcenum datasource\(s\) deleted.
 		
+fi
+
+# If user choose to delete only, exit script after resource deletion
+if [[ $DELETEONLY == "yes" ]]; then
+	exit
 fi
 
 # Based on the CUR source region, bjs or global, we will define different name for datasource/dataset/dashboard
