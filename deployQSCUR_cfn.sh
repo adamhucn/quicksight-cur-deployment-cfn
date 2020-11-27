@@ -408,7 +408,9 @@ export AWS_DEFAULT_OUTPUT="json"
 
 # Get the running profile
 stsresult=`aws sts get-caller-identity`
-echo $stsresult >> result.txt
+echo "sts get-caller-identity result:" >> /home/ec2-user/qscurlog.txt
+echo $stsresult >> /home/ec2-user/qscurlog.txt
+echo "" >> /home/ec2-user/qscurlog.txt
 
 # Get the Account ID by running profile
 AccountID=`echo $stsresult | jq -r '.Account'`
