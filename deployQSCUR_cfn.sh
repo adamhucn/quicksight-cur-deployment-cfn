@@ -362,7 +362,7 @@ updateDataSourcePermissions(){
 
 aws configure set aws_access_key_id $ACCESSKEY
 aws configure set aws_secret_access_key $SECRETKEY
-aws configure set default.region us-east-1
+aws configure set default.region $REGIONCUR
 
 # Necessary parameters from cloudformation
 # REGIONCUR
